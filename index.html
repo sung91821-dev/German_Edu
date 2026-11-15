@@ -148,6 +148,18 @@
       opacity: 0; transition: opacity .2s; pointer-events: none; font-weight: 600;
     }
     .toast.show { opacity: 1; }
+    /* phonics */
+    .ph { color: var(--text-strong); font-size: 1.35rem; font-weight: 700; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+    .ph .sound { color: var(--primary); font-size: 1rem; font-weight: 600; }
+    .exs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .ex {
+      background: var(--bg3); color: var(--text); border: 1px solid var(--border); border-radius: 8px;
+      padding: 6px 10px; font: inherit; cursor: pointer; text-align: left; line-height: 1.3;
+    }
+    .ex:hover { border-color: var(--primary); }
+    .ex b { color: var(--text-strong); font-weight: 600; }
+    .ex .rd { color: var(--primary); font-size: 0.85rem; margin-left: 4px; }
+    .ex small { display: block; color: var(--muted); font-size: 0.8rem; }
     footer { color: var(--muted); text-align: center; font-size: 0.85rem; padding: 24px 0 40px; }
   </style>
 </head>
@@ -155,13 +167,14 @@
   <header class="hero">
     <div class="wrap">
       <h1>독일어 표현집</h1>
-      <p>기초 표현부터 쉬운 발표 문장, 업무 단어까지 한곳에서 외우기</p>
+      <p>발음 규칙과 기초 표현부터 쉬운 발표 문장, 업무 단어까지 한곳에서 외우기</p>
     </div>
   </header>
 
   <nav class="tabs">
     <div class="wrap" role="tablist">
       <button data-tab="phrases" class="active">기초·발표 문장</button>
+      <button data-tab="phonics">발음 규칙</button>
       <button data-tab="soften">공손하게 말하기</button>
       <button data-tab="vocab">업무 단어</button>
       <button data-tab="starred">★ 즐겨찾기</button>
@@ -177,6 +190,7 @@
     <p class="hint">🔊 발음 듣기 · 📋 복사 · ☆ 즐겨찾기. 연습 모드에서는 독일어가 가려지고, 한국어를 보고 말해본 뒤 눌러서 확인할 수 있어요.</p>
 
     <section class="panel active" id="panel-phrases"></section>
+    <section class="panel" id="panel-phonics"></section>
     <section class="panel" id="panel-soften"></section>
     <section class="panel" id="panel-vocab"></section>
     <section class="panel" id="panel-starred"></section>
@@ -252,6 +266,73 @@ const PHRASES = [
     { en: "hundert / tausend / Million", ko: "백 / 천 / 백만" },
     { en: "einundzwanzig", ko: "21", note: "독일어는 1의 자리를 먼저: 1 + und + 20" },
     { en: "Der Umsatz ist um zehn Prozent gestiegen.", ko: "매출이 10% 올랐습니다." },
+  ]},
+];
+
+// 발음 규칙(파닉스): ph = 글자, sound = 한국어로 비슷한 소리, ex = [단어, 뜻, 한글 발음]
+const PHONICS = [
+  { title: '먼저 알아둘 3가지', sub: 'Grundregeln', items: [
+    { ph: "쓰인 대로 읽는다", sound: "", ko: "영어와 달리 독일어는 규칙만 알면 처음 보는 단어도 거의 그대로 읽을 수 있어요.", ex: [["Automatisierung","자동화","아우토마티지룽"],["Netzwerk","네트워크","네츠베어크"]] },
+    { ph: "강세는 보통 첫 음절", sound: "", ko: "Kunde는 '쿤'을, Firma는 '피'를 세게. 단, 외래어(-tion, -tät, -ie)는 끝을 세게 읽어요.", ex: [["Kunde","고객","쿤데"],["Firma","회사","피르마"],["Präsentation","발표","프레젠타치온"],["Qualität","품질","크발리테트"]] },
+    { ph: "모음 길이: 길게 vs 짧게", sound: "", ko: "모음 뒤에 h가 오거나 모음이 두 번 쓰이면 길게, 자음이 두 개 이어지면 짧게 끊어 읽어요.", ex: [["Zahl","숫자","차-ㄹ"],["sehr","매우","제-어"],["Boot","보트","보-트"],["Bett","침대","벳"],["Kosten","비용","코스텐"]] },
+  ]},
+  { title: '움라우트', sub: 'Ä · Ö · Ü', items: [
+    { ph: "ä", sound: "[에]", ko: "그냥 '에'라고 읽으면 돼요. 길게 읽을 때가 많아요.", ex: [["Qualität","품질","크발리테트"],["Gerät","기기, 장치","게레-트"],["Relais","릴레이","렐레"],["erklären","설명하다","에어클레-렌"]], note: "Relais는 프랑스어에서 온 말이라 ä는 없지만 같은 [에] 소리예요" },
+    { ph: "ö", sound: "[외]", ko: "입술을 '오' 모양으로 동그랗게 만든 채 '에'라고 말해요.", ex: [["Lösung","솔루션","뢰-중"],["hören","듣다","회-렌"],["schön","예쁜, 좋은","쇤"],["möchte","~하고 싶다","뫼히테"]] },
+    { ph: "ü", sound: "[위]", ko: "입술을 '우' 모양으로 쭉 내민 채 '이'라고 말해요. '우이'처럼 두 소리로 나누지 않아요.", ex: [["für","~을 위해","퓌어"],["fünf","5","퓐프"],["Prüfung","검사, 시험","프뤼-풍"],["zuverlässig","신뢰성 있는","추페어레시히"]] },
+  ]},
+  { title: '모음 두 개가 붙을 때', sub: 'Diphthonge', items: [
+    { ph: "ei · ai", sound: "[아이]", ko: "'에이'가 아니라 '아이'. 영어 eye처럼.", ex: [["ein","하나, 한","아인"],["zwei","2","츠바이"],["Preis","가격","프라이스"],["Bereich","분야","베라이히"]] },
+    { ph: "ie", sound: "[이-]", ko: "'이에'가 아니라 길게 '이-'.", ex: [["Sie","당신","지-"],["vier","4","피-어"],["Lieferzeit","납기","리-퍼차이트"],["Effizienz","효율","에피치엔츠"]], note: "ei / ie 헷갈릴 때: 뒤 글자를 영어 알파벳 이름으로 읽어요 (ei → i '아이', ie → e '이')" },
+    { ph: "eu · äu", sound: "[오이]", ko: "'에우'가 아니라 '오이'.", ex: [["neu","새로운","노이"],["heute","오늘","호이테"],["Steuerung","제어기","슈토이어룽"],["Deutsch","독일어","도이취"]] },
+    { ph: "au", sound: "[아우]", ko: "그대로 '아우'.", ex: [["aus","~에서","아우스"],["auch","~도","아우흐"],["Automatisierung","자동화","아우토마티지룽"]] },
+  ]},
+  { title: '영어와 다르게 읽는 자음', sub: 'Konsonanten', items: [
+    { ph: "w", sound: "[ㅂ (v)]", ko: "영어 v처럼 윗니를 아랫입술에 대고 '브'. 영어 w(워) 소리가 아니에요.", ex: [["wichtig","중요한","비히티히"],["Wie?","어떻게?","비-"],["Netzwerk","네트워크","네츠베어크"],["Signalwandler","신호변환기","지그날반들러"]] },
+    { ph: "v", sound: "[ㅍ (f)]", ko: "독일어 단어에서는 f 소리. 외래어(Version, Video)에서만 v 소리예요.", ex: [["vier","4","피-어"],["Vorteil","장점","포어타일"],["vielleicht","아마","필라이히트"],["Version","버전","베어지온"]] },
+    { ph: "z", sound: "[ㅊ (ts)]", ko: "'즈'가 아니라 '츠'. 혀끝에서 터뜨려요.", ex: [["zehn","10","체-엔"],["zuständig","담당하는","추슈텐디히"],["Zahl","숫자","차-ㄹ"],["Lieferzeit","납기","리-퍼차이트"]] },
+    { ph: "s + 모음", sound: "[ㅈ (z)]", ko: "모음 앞의 s는 흐린 '즈' 소리. 끝이나 자음 앞에서는 '스'.", ex: [["Sensor","센서","젠조어"],["sicher","안전한","지혀"],["Sie","당신","지-"],["Preis","가격","프라이스"]] },
+    { ph: "ß · ss", sound: "[ㅆ]", ko: "ß(에스체트)는 ss와 같은 날카로운 '스' 소리. 대문자로 쓸 때는 SS.", ex: [["groß","큰","그로-스"],["Grüße","인사","그뤼-세"],["Schluss","끝, 마무리","슐루스"]] },
+    { ph: "j", sound: "[이 (y)]", ko: "영어 j(쥐)가 아니라 영어 y 소리.", ex: [["ja","네","야"],["Jahr","해, 년","야-르"],["Projekt","프로젝트","프로옉트"]] },
+    { ph: "qu", sound: "[크브]", ko: "'쿠'가 아니라 '크브'.", ex: [["Qualität","품질","크발리테트"],["Quelle","출처","크벨레"]] },
+    { ph: "th", sound: "[ㅌ]", ko: "영어 th(번데기 발음)가 아니라 그냥 't'.", ex: [["Thema","주제","테-마"],["Theorie","이론","테오리-"]] },
+    { ph: "pf", sound: "[프f]", ko: "p와 f를 거의 동시에. 입술을 붙였다가 '프'.", ex: [["Kopf","머리","콥프"],["Apfel","사과","압펠"]] },
+  ]},
+  { title: 'sch · sp · st · tsch', sub: '쉬 소리', items: [
+    { ph: "sch", sound: "[쉬]", ko: "입술을 내밀고 '쉬'. 영어 sh와 같아요.", ex: [["Schaltschrank","제어반","샬트슈랑크"],["schnell","빠른","슈넬"],["schicken","보내다","쉬켄"]] },
+    { ph: "sp · st (단어 맨 앞)", sound: "[슈프 · 슈트]", ko: "단어나 단어 조각의 맨 앞에서는 s를 '슈'로 읽어요.", ex: [["sprechen","말하다","슈프레혠"],["Steuerung","제어기","슈토이어룽"],["Stunde","시간","슈툰데"],["zuständig","담당하는","추슈텐디히"]], note: "zu + ständig처럼 붙은 단어 안에서도 조각의 맨 앞이면 '슈'" },
+    { ph: "st (단어 중간·끝)", sound: "[스트]", ko: "맨 앞이 아니면 그냥 '스트'.", ex: [["Kosten","비용","코스텐"],["Test","테스트","테스트"],["erst","먼저","에어스트"]] },
+    { ph: "tsch", sound: "[취]", ko: "'츠쉬'를 한 번에 → '취'.", ex: [["Deutsch","독일어","도이취"],["tschüss","안녕(헤어질 때)","취스"]] },
+  ]},
+  { title: 'ch 소리 두 가지', sub: 'ich-Laut · ach-Laut', items: [
+    { ph: "a·o·u·au 뒤의 ch", sound: "[흐 (목 안쪽)]", ko: "목구멍 안쪽을 살짝 긁듯이 '흐'. 가래 뱉기 직전 소리처럼.", ex: [["acht","8","아흐트"],["auch","~도","아우흐"],["Buch","책","부-흐"],["machen","하다","마헨"]] },
+    { ph: "e·i·ä·ö·ü 뒤, 자음 뒤의 ch", sound: "[히 (혀 위)]", ko: "혀를 입천장 가까이 올리고 '히'. 고양이가 '쉬익' 하는 느낌의 부드러운 소리.", ex: [["ich","나","이히"],["nicht","아니다","니히트"],["sicher","안전한","지혀"],["möchte","~하고 싶다","뫼히테"]] },
+    { ph: "-ig (단어 끝)", sound: "[이히]", ko: "끝의 -ig는 '익'보다 '이히'로 읽는 게 표준이에요.", ex: [["wichtig","중요한","비히티히"],["zuverlässig","신뢰성 있는","추페어레시히"],["zwanzig","20","츠반치히"]] },
+    { ph: "chs", sound: "[크스 (ks)]", ko: "chs는 x처럼 '크스'.", ex: [["sechs","6","젝스"],["wachsen","성장하다","박센"]] },
+  ]},
+  { title: 'r 과 -er', sub: 'R-Laut', items: [
+    { ph: "r (단어 앞·모음 앞)", sound: "[ㅎ과 ㄹ 사이]", ko: "혀끝이 아니라 목젖 근처에서 가볍게 긁는 소리. 어려우면 가볍게 'ㄹ'로 해도 통해요.", ex: [["rot","빨간","로-트"],["Preis","가격","프라이스"],["Relais","릴레이","렐레"],["Prüfung","검사, 시험","프뤼-풍"]] },
+    { ph: "모음 뒤의 r", sound: "[어/아]", ko: "모음 뒤 r은 거의 '어/아'처럼 약해져요.", ex: [["der","그 (남성)","데-어"],["vier","4","피-어"],["für","~을 위해","퓌어"],["sehr","매우","제-어"]] },
+    { ph: "-er (단어 끝)", sound: "[어/아]", ko: "끝의 -er은 '에르'가 아니라 가볍게 '아'에 가까운 '어'.", ex: [["aber","하지만","아-버"],["Fehler","오류","페-러"],["Partner","파트너","파트너"],["Sensor","센서","젠조어"]] },
+    { ph: "ver- · er- (앞에 붙을 때)", sound: "[페어 · 에어]", ko: "앞에 붙는 ver-, er-는 약하게 '페어', '에어'. 강세는 그 뒤에 와요.", ex: [["verstehen","이해하다","페어슈테-엔"],["erklären","설명하다","에어클레-렌"]] },
+  ]},
+  { title: '끝소리 규칙', sub: 'Auslautverhärtung', items: [
+    { ph: "끝의 b · d · g", sound: "[ㅍ · ㅌ · ㅋ]", ko: "단어(조각) 끝의 b, d, g는 힘 빠진 p, t, k로 읽어요.", ex: [["und","그리고","운트"],["Tag","날, 낮","타-크"],["halb","반","할프"],["Abschluss","마무리","압슐루스"]], note: "Guten Tag도 '구텐 타그'가 아니라 '구텐 탁'" },
+    { ph: "h (모음 뒤)", sound: "[소리 없음]", ko: "모음 뒤 h는 읽지 않고 앞 모음을 길게 만드는 표시예요.", ex: [["Fehler","오류","페-러"],["Zahl","숫자","차-ㄹ"],["Uhr","시계, ~시","우-어"],["zehn","10","체-엔"]] },
+    { ph: "-e (단어 끝)", sound: "[으/에 가볍게]", ko: "끝의 e는 묵음이 아니에요. 힘을 빼고 짧게 '에'.", ex: [["danke","감사합니다","당케"],["Kunde","고객","쿤데"],["bitte","부탁합니다","비테"]] },
+  ]},
+  { title: '자주 나오는 단어 끝', sub: 'Endungen', items: [
+    { ph: "-ung", sound: "[웅]", ko: "명사를 만드는 끝. g는 거의 안 들리고 '웅'. 강세는 앞쪽에.", ex: [["Lösung","솔루션","뢰-중"],["Steuerung","제어기","슈토이어룽"],["Besprechung","회의","베슈프레휭"]] },
+    { ph: "-tion", sound: "[치온]", ko: "'션'이 아니라 '치온'. 강세는 '온'에.", ex: [["Präsentation","발표","프레젠타치온"],["Information","정보","인포르마치온"],["Installation","설치","인스탈라치온"]] },
+    { ph: "-tät", sound: "[테트]", ko: "'티'가 아니라 '테트'. 강세는 끝에.", ex: [["Qualität","품질","크발리테-트"],["Flexibilität","유연성","플렉시빌리테-트"]] },
+    { ph: "-heit · -keit", sound: "[하이트 · 카이트]", ko: "형용사를 명사로 바꾸는 끝.", ex: [["Sicherheit","보안, 안전","지혀하이트"],["Cybersicherheit","사이버 보안","사이버지혀하이트"],["Aufmerksamkeit","주의, 관심","아우프메르크잠카이트"]] },
+  ]},
+  { title: '헷갈리는 짝 비교', sub: '눌러서 차이를 들어보세요', items: [
+    { ph: "u ↔ ü", sound: "", ko: "입 모양은 같고 혀 위치만 달라요.", ex: [["Mutter","어머니","무터"],["Mütter","어머니들","뮈터"]] },
+    { ph: "o ↔ ö", sound: "", ko: "schon(이미)과 schön(좋은)은 뜻이 완전히 달라요.", ex: [["schon","이미","숀"],["schön","좋은, 예쁜","쇤"]] },
+    { ph: "a ↔ ä", sound: "", ko: "zahlen(돈을 내다) vs zählen(숫자를 세다).", ex: [["zahlen","지불하다","차-렌"],["zählen","세다","체-렌"]] },
+    { ph: "ei ↔ ie", sound: "", ko: "글자 순서만 바뀌어도 소리가 달라요.", ex: [["Wein","와인","바인"],["Wien","빈(도시)","빈-"]] },
+    { ph: "ach ↔ ich", sound: "", ko: "앞 모음에 따라 ch 소리가 바뀌어요.", ex: [["Bach","시냇물","바흐"],["Bäche","시냇물들","베혀"]] },
   ]},
 ];
 
@@ -353,7 +434,25 @@ function groupsHTML(groups, opts) {
   </div>`).join('');
 }
 
+function phonicsHTML() {
+  return `<p class="hint" style="margin-top:20px">글자별 읽는 법이에요. 예시 단어를 누르면 발음이 나오고, 🔊는 예시를 한꺼번에 들려줘요. 한글 발음은 비슷한 소리일 뿐이니 꼭 소리로 확인하세요.</p>` +
+    PHONICS.map(g => `<div class="group"><h2>${esc(g.title)} <small>${esc(g.sub || '')}</small></h2>
+    ${g.items.map(it => `<div class="card" data-search="${esc(norm(it.ph + ' ' + it.sound + ' ' + it.ko + ' ' + (it.note||'') + ' ' + it.ex.flat().join(' ')))}">
+      <div class="body">
+        <div class="ph">${esc(it.ph)}${it.sound ? `<span class="sound">${esc(it.sound)}</span>` : ''}</div>
+        <div class="ko">${esc(it.ko)}</div>
+        ${it.note ? `<div class="note">${esc(it.note)}</div>` : ''}
+        <div class="exs">${it.ex.map(([w, m, r]) => `<button class="ex" data-act="say" data-rate="0.8" data-text="${esc(w)}"><b>${esc(w)}</b><span class="rd">${esc(r)}</span><small>${esc(m)}</small></button>`).join('')}</div>
+      </div>
+      <div class="actions">
+        <button class="iconbtn" data-act="say" data-rate="0.8" data-text="${esc(it.ex.map(e => e[0]).join(', '))}" title="예시 모두 듣기">🔊</button>
+      </div>
+    </div>`).join('')}
+  </div>`).join('');
+}
+
 function render() {
+  document.getElementById('panel-phonics').innerHTML = phonicsHTML();
   document.getElementById('panel-phrases').innerHTML = groupsHTML(PHRASES);
   document.getElementById('panel-soften').innerHTML = groupsHTML(SOFTEN);
 
@@ -457,7 +556,7 @@ document.addEventListener('click', async e => {
   const b = e.target.closest('[data-act]');
   if (!b) return;
   const act = b.dataset.act;
-  if (act === 'say') speak(b.dataset.text);
+  if (act === 'say') speak(b.dataset.text, parseFloat(b.dataset.rate) || 0.95);
   if (act === 'copy') {
     try { await navigator.clipboard.writeText(b.dataset.text); toast('복사했어요'); } catch { toast('복사하지 못했어요'); }
   }
