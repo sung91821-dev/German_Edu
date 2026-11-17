@@ -707,39 +707,15 @@ function render() {
   document.getElementById('panel-phrases').innerHTML = groupsHTML(PHRASES);
   document.getElementById('panel-soften').innerHTML = groupsHTML(SOFTEN);
 
-  document.getElementById('panel-vocab').innerHTML =
-    `<div class="group"><h2>내 단어 <small>My words</small></h2>
-      ${myWords.length ? myWords.map(it => cardHTML(it, { deletable: true })).join('') : '<div class="empty">아직 추가한 단어가 없어요. 아래에서 업무에 쓰는 단어를 추가해 보세요.</div>'}
-      <form class="add" id="addForm">
-        <input name="en" placeholder="독일어, 관사 포함 (예: die Qualität)" required />
-        <input name="ko" placeholder="뜻 (예: 품질)" required />
-        <input name="note" placeholder="예문이나 메모 (선택)" />
-        <button type="submit">추가</button>
-      </form>
-    </div>` + groupsHTML(VOCAB_BASE);
+  document.getElementById('panel-vocab').innerHTML = groupsHTML(VOCAB_BASE);
 
-  const all = [...PHRASES, ...SOFTEN, ...VOCAB_BASE].flatMap(g => g.items).concat(myWords);
+  const all = [...PHRASES, ...SOFTEN, ...VOCAB_BASE].flatMap(g => g.items);
   const starredItems = all.filter((it, i, arr) => stars.has(keyOf(it)) && arr.findIndex(x => keyOf(x) === keyOf(it)) === i);
   document.getElementById('panel-starred').innerHTML = groupsHTML([{ title: '즐겨찾기', sub: '발표 전에 빠르게 훑어보기', items: starredItems, empty: '☆를 눌러 자주 볼 문장을 모아두세요.' }]);
 
   applySearch();
-  bindVocabForm();
 }
 
-function bindVocabForm() {
-  const f = document.getElementById('addForm');
-  f.onsubmit = e => {
-    e.preventDefault();
-    const d = Object.fromEntries(new FormData(f));
-    const item = { en: d.en.trim(), ko: d.ko.trim() };
-    if (d.note.trim()) item.note = d.note.trim();
-    if (!item.en || !item.ko) return;
-    myWords = myWords.filter(w => w.en !== item.en).concat(item);
-    store.set('de.myWords', myWords);
-    render();
-    document.querySelector('#addForm input[name=en]').focus();
-  };
-}
 
 /* ───────────── 검색 ───────────── */
 function applySearch() {
