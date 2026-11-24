@@ -146,6 +146,7 @@
       position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
       background: var(--primary); color: #fff; padding: 8px 16px; border-radius: 999px;
       opacity: 0; transition: opacity .2s; pointer-events: none; font-weight: 600;
+      max-width: calc(100vw - 32px); width: max-content; text-align: center; border-radius: 16px; z-index: 1000;
     }
     .toast.show { opacity: 1; }
     /* phonics */
@@ -757,20 +758,85 @@ function showTab(name) {
 document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
 
 /* ───────────── 버튼 동작 ───────────── */
+// ---- 음성 읽기 (여러 브라우저/휴대폰에서 안정적으로 동작하도록) ----
+const TTS_LANG = 'de-DE', TTS_LANG_NAME = '독일어';
+let ttsVoices = [], ttsCurrent = null, ttsWarnedNoVoice = false;
+function ttsLoadVoices() {
+  try { ttsVoices = speechSynthesis.getVoices() || []; } catch (e) { ttsVoices = []; }
+}
+if ('speechSynthesis' in window) {
+  ttsLoadVoices();
+  if (speechSynthesis.addEventListener) speechSynthesis.addEventListener('voiceschanged', ttsLoadVoices);
+  else speechSynthesis.onvoiceschanged = ttsLoadVoices;
+}
+function ttsPickVoice() {
+  if (!ttsVoices.length) ttsLoadVoices();
+  const norm = l => (l || '').replace('_', '-').toLowerCase();
+  const want = TTS_LANG.toLowerCase(), base = want.split('-')[0];
+  const exact = ttsVoices.filter(v => norm(v.lang) === want);
+  const same = exact.length ? exact : ttsVoices.filter(v => norm(v.lang).split('-')[0] === base);
+  if (!same.length) return null;
+  return same.find(v => v.localService) || same[0];
+}
+function ttsChunks(text) {
+  // 긴 글은 문장 단위로 나눠 읽기 (Chrome은 15초 넘게 읽으면 멈추는 문제가 있음)
+  const parts = text.match(/[^.!?。！？\n]+[.!?。！？]*\s*/g) || [text];
+  const out = [];
+  parts.forEach(p => {
+    p = p.trim(); if (!p) return;
+    while (p.length > 200) {
+      let cut = p.lastIndexOf(' ', 200); if (cut < 50) cut = 200;
+      out.push(p.slice(0, cut)); p = p.slice(cut).trim();
+    }
+    if (p) out.push(p);
+  });
+  return out.length ? out : [text];
+}
 function speak(text, rate = 0.95) {
-  if (!('speechSynthesis' in window)) { toast('이 브라우저는 음성 읽기를 지원하지 않아요'); return; }
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text.replace(/_+/g, ' '));
-  u.lang = 'de-DE'; u.rate = rate;
-  const v = speechSynthesis.getVoices().find(v => v.lang.replace('_','-') === 'de-DE');
-  if (v) u.voice = v;
-  speechSynthesis.speak(u);
+  if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
+    toast(/KAKAOTALK/i.test(navigator.userAgent)
+      ? '카카오톡 안에서는 소리가 안 나요. 오른쪽 위 메뉴 → "다른 브라우저로 열기"를 눌러주세요'
+      : '이 브라우저는 음성 읽기를 지원하지 않아요. Chrome이나 Safari로 열어주세요', 4000);
+    return;
+  }
+  text = (text || '').replace(/_+/g, ' ').trim();
+  if (!text) return;
+  const synth = speechSynthesis;
+  if (synth.speaking || synth.pending) synth.cancel();
+  if (synth.paused) synth.resume();
+  const voice = ttsPickVoice();
+  if (!voice && ttsVoices.length && !ttsWarnedNoVoice) {
+    ttsWarnedNoVoice = true;
+    toast('이 기기에 ' + TTS_LANG_NAME + ' 음성이 없어요. 휴대폰 설정 → 음성 출력(TTS)에서 ' + TTS_LANG_NAME + ' 음성을 설치해 주세요', 5000);
+  }
+  let started = false;
+  const chunks = ttsChunks(text);
+  const queue = chunks.map(c => {
+    const u = new SpeechSynthesisUtterance(c);
+    u.lang = TTS_LANG; u.rate = rate; u.volume = 1;
+    if (voice) u.voice = voice;
+    u.onstart = () => { started = true; };
+    u.onerror = e => {
+      if (e.error === 'interrupted' || e.error === 'canceled') return;
+      if (e.error === 'not-allowed') toast('한 번 더 눌러주세요 (브라우저가 소리를 막았어요)', 2500);
+      else if (e.error === 'language-unavailable' || e.error === 'voice-unavailable') toast('이 기기에 ' + TTS_LANG_NAME + ' 음성이 없어요. 설정에서 음성을 설치해 주세요', 4000);
+      else toast('소리를 재생하지 못했어요 (' + e.error + ')', 2500);
+    };
+    return u;
+  });
+  ttsCurrent = queue; // 참조를 잡아둬야 일부 브라우저에서 소리가 중간에 끊기지 않음
+  queue.forEach(u => synth.speak(u));
+  setTimeout(() => {
+    if (!started && ttsCurrent === queue && !synth.speaking) {
+      toast('소리가 안 나면: 무음 모드 해제·볼륨 확인, 또는 Chrome/Safari로 열어보세요', 4000);
+    }
+  }, 3000);
 }
 let toastTimer;
-function toast(msg) {
+function toast(msg, ms = 1400) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 1400);
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms);
 }
 
 document.addEventListener('click', async e => {
